@@ -4,7 +4,7 @@ import openai
 import asyncio
 
 # Bot tokens
-DISCORD_TOKEN = 'MTM3MjMxNTk1MDI1NDI2NDMyMA.Ge7Egy.QVoQfy8wpxLJopX1-M0glltPO56s6sBKMIKQzU'
+DISCORD_TOKEN = 'MTM3MjMxNTk1MDI1NDI2NDMyMA.GK4JmG.-QgdN2uznCoOnpPNC3ofOGZQvuu4a60flNr2QI'
 OPENAI_API_KEY = 'sk-proj-tGgoytguFyz_5sTsgOMJcBcICTBhuPe2EAYCMS-TQtDE52LymHGDEX2gWBqsg_2CliQywDvzDT3BlbkFJYcv4AqsDp_INcpxFaAMg2hOJ1NUnmrm27k5g__C41BSfvuJoZ1XxRqctfAMS8fCabo5y3uW6EA'
 
 # Bot setup
