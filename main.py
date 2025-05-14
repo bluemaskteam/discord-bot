@@ -164,4 +164,4 @@ if __name__ == "__main__":
     if not config["owner_id"]:
         print("يرجى تعيين أيدي المالك في ملف config.json قبل تشغيل البوت.")
     else:
-        bot.run("your-discord-bot-token")  # استبدل ب token البوت الخاص بك
+        bot.run("MTM3MjMxNTk1MDI1NDI2NDMyMA.GJt90M._wWEitG6gTW3r3oveszigohWk_U-0yJqvsm5zk")  # استبدل ب token البوت الخاص بك
