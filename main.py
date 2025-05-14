@@ -1,167 +1,55 @@
 import discord
 from discord.ext import commands
 import openai
-import json
-import os
-from datetime import datetime
+import asyncio
 
-# إعدادات البوت
-CONFIG_FILE = "config.json"
-DEFAULT_CONFIG = {
-    "owner_id": "1326282398299586611",  # أضف أيدي المالك هنا
-    "allowed_users": [],
-    "user_limits": {}
-}
+# Bot tokens
+DISCORD_TOKEN = 'MTM3MjMxNTk1MDI1NDI2NDMyMA.Ge7Egy.QVoQfy8wpxLJopX1-M0glltPO56s6sBKMIKQzU'
+OPENAI_API_KEY = 'sk-proj-tGgoytguFyz_5sTsgOMJcBcICTBhuPe2EAYCMS-TQtDE52LymHGDEX2gWBqsg_2CliQywDvzDT3BlbkFJYcv4AqsDp_INcpxFaAMg2hOJ1NUnmrm27k5g__C41BSfvuJoZ1XxRqctfAMS8fCabo5y3uW6EA'
 
-# تحميل أو إنشاء ملف الإعدادات
-def load_config():
-    if not os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(DEFAULT_CONFIG, f, indent=4)
-        return DEFAULT_CONFIG
-    else:
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
-
-def save_config(config):
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f, indent=4)
-
-# تحميل الإعدادات
-config = load_config()
-
-# إعداد البوت
-intents = discord.Intents.default()
-intents.message_content = True
-
+# Bot setup
+intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# إعداد OpenAI (استبدل بمفتاح API الخاص بك)
-openai.api_key = "your-openai-api-key"
+# OpenAI setup
+openai.api_key = OPENAI_API_KEY
 
-class ImageGeneration(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.config = config
+# Command to create server by type
+@bot.command()
+async def create(ctx, *, server_type: str):
+    await ctx.send(f"🔧 Creating server of type: **{server_type}**...")
 
-    def is_owner(self, user_id):
-        return str(user_id) == self.config["owner_id"]
+    # Use AI to generate server settings
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an assistant that creates Discord server setups."},
+            {"role": "user", "content": f"Create professional Discord server settings for type: {server_type}. Should include decorated channels, roles, and permissions."}
+        ]
+    )
 
-    def is_allowed(self, user_id):
-        return str(user_id) in self.config["allowed_users"] or self.is_owner(user_id)
+    settings = response['choices'][0]['message']['content']
 
-    def get_user_limit(self, user_id):
-        if self.is_allowed(user_id):
-            return float('inf')  # لا يوجد حد للمستخدمين المسموح لهم
-        return self.config["user_limits"].get(str(user_id), 5)  # الحد الافتراضي هو 5
+    await ctx.send("📄 AI-generated settings:\n" + "```" + settings[:1900] + "```")
 
-    def update_user_limit(self, user_id, count):
-        if not self.is_allowed(user_id):
-            self.config["user_limits"][str(user_id)] = self.get_user_limit(user_id) - count
-            save_config(self.config)
+    # Create basic channels as example:
+    guild = ctx.guild
 
-    @commands.command(name="generate", help="إنشاء صورة باستخدام الذكاء الاصطناعي. الاستخدام: !generate وصف الصورة")
-    async def generate_image(self, ctx, *, prompt: str):
-        user_id = str(ctx.author.id)
-        remaining = self.get_user_limit(user_id)
+    # Text channels
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=True)
+    }
 
-        if remaining <= 0:
-            await ctx.send(f"لقد استنفدت عدد المحاولات المسموح بها ({self.get_user_limit(user_id)}). اتصل بالمالك للحصول على المزيد.")
-            return
+    await guild.create_text_channel("📜│rules", overwrites=overwrites)
+    await guild.create_text_channel("💬│general-chat", overwrites=overwrites)
+    await guild.create_text_channel("🛒│order-your-shop", overwrites=overwrites)
 
-        try:
-            await ctx.send("جاري إنشاء الصورة... قد يستغرق الأمر بضع لحظات ⏳")
+    # Roles
+    await guild.create_role(name="👑 | Admin", colour=discord.Colour.red())
+    await guild.create_role(name="🛍️ | Shop Owner", colour=discord.Colour.green())
+    await guild.create_role(name="👤 | Member", colour=discord.Colour.blue())
 
-            # استدعاء OpenAI API لإنشاء الصورة
-            response = openai.Image.create(
-                prompt=prompt,
-                n=1,
-                size="1024x1024"
-            )
+    await ctx.send("✅ Server created successfully!")
 
-            image_url = response['data'][0]['url']
-            
-            # إنشاء embed لعرض الصورة
-            embed = discord.Embed(
-                title="الصورة المطلوبة",
-                description=prompt,
-                color=discord.Color.blue()
-            )
-            embed.set_image(url=image_url)
-            embed.set_footer(text=f"طلب من قبل: {ctx.author.display_name}")
-            
-            await ctx.send(embed=embed)
-            
-            # تحديث عدد المحاولات المتبقية
-            self.update_user_limit(user_id, 1)
-            
-            if not self.is_allowed(user_id):
-                await ctx.send(f"تبقى لديك {self.get_user_limit(user_id)} محاولات.")
-
-        except Exception as e:
-            await ctx.send(f"حدث خطأ أثناء إنشاء الصورة: {str(e)}")
-
-    @commands.command(name="adduser", help="إضافة مستخدم إلى قائمة المسموح لهم (للمالك فقط)")
-    @commands.has_permissions(administrator=True)
-    async def add_allowed_user(self, ctx, user: discord.User):
-        if not self.is_owner(str(ctx.author.id)):
-            await ctx.send("ليس لديك صلاحية تنفيذ هذا الأمر.")
-            return
-
-        user_id = str(user.id)
-        if user_id not in self.config["allowed_users"]:
-            self.config["allowed_users"].append(user_id)
-            save_config(self.config)
-            await ctx.send(f"تمت إضافة {user.display_name} إلى قائمة المسموح لهم.")
-        else:
-            await ctx.send(f"{user.display_name} موجود بالفعل في القائمة.")
-
-    @commands.command(name="removeuser", help="إزالة مستخدم من قائمة المسموح لهم (للمالك فقط)")
-    @commands.has_permissions(administrator=True)
-    async def remove_allowed_user(self, ctx, user: discord.User):
-        if not self.is_owner(str(ctx.author.id)):
-            await ctx.send("ليس لديك صلاحية تنفيذ هذا الأمر.")
-            return
-
-        user_id = str(user.id)
-        if user_id in self.config["allowed_users"]:
-            self.config["allowed_users"].remove(user_id)
-            save_config(self.config)
-            await ctx.send(f"تمت إزالة {user.display_name} من قائمة المسموح لهم.")
-        else:
-            await ctx.send(f"{user.display_name} غير موجود في القائمة.")
-
-    @commands.command(name="resetlimits", help="إعادة تعيين حدود جميع المستخدمين (للمالك فقط)")
-    @commands.has_permissions(administrator=True)
-    async def reset_limits(self, ctx):
-        if not self.is_owner(str(ctx.author.id)):
-            await ctx.send("ليس لديك صلاحية تنفيذ هذا الأمر.")
-            return
-
-        self.config["user_limits"] = {}
-        save_config(self.config)
-        await ctx.send("تم إعادة تعيين حدود جميع المستخدمين.")
-
-    @commands.command(name="checklimit", help="التحقق من عدد المحاولات المتبقية")
-    async def check_limit(self, ctx):
-        user_id = str(ctx.author.id)
-        remaining = self.get_user_limit(user_id)
-        
-        if self.is_allowed(user_id):
-            await ctx.send("لديك صلاحية إنشاء عدد غير محدود من الصور.")
-        else:
-            await ctx.send(f"تبقى لديك {remaining} محاولات لإنشاء الصور.")
-
-# إعداد الأحداث
-@bot.event
-async def on_ready():
-    await bot.add_cog(ImageGeneration(bot))
-    print(f'تم تسجيل الدخول كـ {bot.user}')
-
-# تشغيل البوت
-if __name__ == "__main__":
-    # تأكد من تعيين أيدي المالك في ملف الإعدادات
-    if not config["owner_id"]:
-        print("يرجى تعيين أيدي المالك في ملف config.json قبل تشغيل البوت.")
-    else:
-        bot.run("MTM3MjMxNTk1MDI1NDI2NDMyMA.GJt90M._wWEitG6gTW3r3oveszigohWk_U-0yJqvsm5zk")  # استبدل ب token البوت الخاص بك
+# Run the bot
+bot.run(DISCORD_TOKEN)
