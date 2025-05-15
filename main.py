@@ -1,55 +1,97 @@
+import os
 import discord
 from discord.ext import commands
-import openai
-import asyncio
+from googleapiclient.discovery import build
+from typing import List, Dict
 
-# Bot tokens
-DISCORD_TOKEN = 'MTM3MjMxNTk1MDI1NDI2NDMyMA.GK4JmG.-QgdN2uznCoOnpPNC3ofOGZQvuu4a60flNr2QI'
-OPENAI_API_KEY = 'sk-proj-tGgoytguFyz_5sTsgOMJcBcICTBhuPe2EAYCMS-TQtDE52LymHGDEX2gWBqsg_2CliQywDvzDT3BlbkFJYcv4AqsDp_INcpxFaAMg2hOJ1NUnmrm27k5g__C41BSfvuJoZ1XxRqctfAMS8fCabo5y3uW6EA'
-
-# Bot setup
-intents = discord.Intents.all()
+# Initialize bot with intents
+intents = discord.Intents.default()
+intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# OpenAI setup
-openai.api_key = OPENAI_API_KEY
+# Google Custom Search setup
+GOOGLE_API_KEY = "AIzaSyBTMxbCz30FGJPYoXAmjjwpUEHUKM4yxCs"
+CSE_ID = "f1200524064c54b08"
+DISCORD_TOKEN = "MTM3MjMxNTk1MDI1NDI2NDMyMA.GZd_w4.Ts-PrqAP_OFRZXRo811lrB5-FNubyMWhSYrP_o"
 
-# Command to create server by type
-@bot.command()
-async def create(ctx, *, server_type: str):
-    await ctx.send(f"🔧 Creating server of type: **{server_type}**...")
+class SearchPaginator(discord.ui.View):
+    def __init__(self, search_results: List[Dict], query: str, start_index: int = 1):
+        super().__init__(timeout=60)
+        self.search_results = search_results
+        self.query = query
+        self.current_page = 0
+        self.start_index = start_index
+        self.max_pages = len(search_results) // 10 + (1 if len(search_results) % 10 else 0)
 
-    # Use AI to generate server settings
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are an assistant that creates Discord server setups."},
-            {"role": "user", "content": f"Create professional Discord server settings for type: {server_type}. Should include decorated channels, roles, and permissions."}
-        ]
-    )
+    async def update_embed(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title=f"Google Search Results for: {self.query}",
+            description=f"Page {self.current_page + 1}/{self.max_pages}",
+            color=discord.Color.blue()
+        )
 
-    settings = response['choices'][0]['message']['content']
+        start_idx = self.current_page * 10
+        end_idx = min(start_idx + 10, len(self.search_results))
 
-    await ctx.send("📄 AI-generated settings:\n" + "```" + settings[:1900] + "```")
+        for i in range(start_idx, end_idx):
+            result = self.search_results[i]
+            embed.add_field(
+                name=f"{i+1}. {result.get('title', 'No title')}",
+                value=f"[{result.get('link', 'No link')}]({result.get('link', '')})\n{result.get('snippet', 'No description')}",
+                inline=False
+            )
 
-    # Create basic channels as example:
-    guild = ctx.guild
+        embed.set_footer(text=f"Results {start_idx + 1}-{end_idx} of {len(self.search_results)}")
+        await interaction.response.edit_message(embed=embed, view=self)
 
-    # Text channels
-    overwrites = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=True)
-    }
+    @discord.ui.button(label="Previous", style=discord.ButtonStyle.primary, disabled=True)
+    async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.current_page -= 1
+        self.next_page.disabled = False
+        if self.current_page == 0:
+            button.disabled = True
+        await self.update_embed(interaction)
 
-    await guild.create_text_channel("📜│rules", overwrites=overwrites)
-    await guild.create_text_channel("💬│general-chat", overwrites=overwrites)
-    await guild.create_text_channel("🛒│order-your-shop", overwrites=overwrites)
+    @discord.ui.button(label="Next", style=discord.ButtonStyle.primary)
+    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.current_page += 1
+        self.previous_button.disabled = False
+        if self.current_page == self.max_pages - 1:
+            button.disabled = True
+        await self.update_embed(interaction)
 
-    # Roles
-    await guild.create_role(name="👑 | Admin", colour=discord.Colour.red())
-    await guild.create_role(name="🛍️ | Shop Owner", colour=discord.Colour.green())
-    await guild.create_role(name="👤 | Member", colour=discord.Colour.blue())
+@bot.command(name="search", help="Search Google for any topic")
+async def search(ctx: commands.Context, *, query: str):
+    try:
+        # Initialize Google Custom Search service
+        service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
 
-    await ctx.send("✅ Server created successfully!")
+        # Perform the search
+        res = service.cse().list(
+            q=query,
+            cx=CSE_ID,
+            num=10
+        ).execute()
 
-# Run the bot
-bot.run(DISCORD_TOKEN)
+        items = res.get('items', [])
+
+        if not items:
+            await ctx.send("No results found.")
+            return
+
+        # Create and send the first page of results
+        paginator = SearchPaginator(items, query)
+        message = await ctx.send("Loading results...", view=paginator)
+        interaction = await bot.wait_for("interaction", check=lambda i: i.message.id == message.id)
+        await paginator.update_embed(interaction)
+
+    except Exception as e:
+        await ctx.send(f"An error occurred: {str(e)}")
+
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user.name} ({bot.user.id})')
+    print('------')
+
+if __name__ == "__main__":
+    bot.run(DISCORD_TOKEN)
